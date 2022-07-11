@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>FAIRDOscope</title>
+    <script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.2.7/dist/js/tabulator.min.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="./css/semantic.min.css">
+    <script
+            src="https://code.jquery.com/jquery-3.1.1.min.js"
+            integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+            crossorigin="anonymous"></script>
+    <script src="./js/semantic.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.7.1/ace.min.js"
+            integrity="sha512-7Jmn5XgQKvX7kd2yARvOywZYQfC6eB7WLLdpWfGifPHe+93PwGf2BpkrX/vPRgPxllivNDnD8TSMHpYb60opMg=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.7.1/mode-json.min.js"
+            integrity="sha512-YXUz04sMmhEPQR5FLg4/6MFWcrTzZRobwv6cEVWsX9bfos1lm/Z5hfVz4WB3Z3XyhcVjWWUOvudJ+CCxecDI7Q=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.7.1/ext-beautify.min.js"
+            integrity="sha512-uXfi0GwpQZcHIhGOMMHeNYtBSjt7qDXjXHmjShWSp+RWMSmjdy69N7M/pufinvQLv6rSYlpbSXqSnLRzWE952w=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <link href="https://unpkg.com/tabulator-tables@5.2.7/dist/css/tabulator_materialize.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-hierarchy@3"></script>
+
+    <script src="./js/mappings.js"></script>
+
+    <link href="./css/fontawesome/css/all.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="./css/style.css">
+    <style>
+
+        .node {
+            cursor: pointer;
+        }
+
+        .node circle {
+            fill: #fff;
+            stroke: steelblue;
+            stroke-width: 3px;
+        }
+
+        .node text {
+            font: 12px sans-serif;
+        }
+
+        .link {
+            fill: none;
+            stroke: #ccc;
+            stroke-width: 2px;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<h1 class="ui header">
+    <img src="./images/logo.png" class="ui circular image">
+    <div class="content">
+        FAIR-DOscope
+        <div class="sub header">Explore the facets of FAIR Digital Objects</div>
+    </div>
+</h1>
+
+<div class="ui action input">
+    <input id="pid_input" style="width: 428px" type="text"
+           value="21.T11981/6ab464ed-978b-4996-876f-f68ea913a308" placeholder="Search...">
+    <button class="ui icon button" onClick="loadPid()">
+        <i class="search icon"></i>
+    </button>
+</div>
+<div class="ui buttons">
+    <button class="ui button" id="plainTypes" onClick="setRenderType(0)">Plain Record</button>
+    <div class="or"></div>
+    <button class="ui positive button active" id="humanReadableTypes" onClick="setRenderType(1)">Interactive
+        Record
+    </button>
+</div>
+
+<div class="ui column grid" style="margin-top: 20px">
+    <div class="ten wide column">
+        <h4 class="ui header">
+            <i class="table icon"></i>
+            <div class="content">
+                PID Information Record
+            </div>
+        </h4>
+        <div class="ui segment">
+            <div id="fairdoscope"></div>
+        </div>
+    </div>
+    <div class="five wide column">
+        <h4 class="ui header">
+            <i class="sitemap icon"></i>
+            <div class="content">
+                FAIR DO Tree
+            </div>
+        </h4>
+        <div class="ui segment" style="min-width: 512px; max-width: 512px">
+            <svg id="tree"/>
+        </div>
+    </div>
+ </div>
+
+
+<!-- JS -->
+<script th:inline="javascript">
+
+    let depth = 0;
+    let fdoList = [];
+    /* Fill options with model definitions for metadata record. */
+    let options = {
+        dataModel: null,
+        items: null
+    };
+
+    let table = null;
+    let columnMode = 0;
+    let tableColumns = [
+        {
+            "title": "Index",
+            "field": "index",
+            "width": 100
+        },
+        {
+            "title": "Type",
+            "field": "type",
+            "formatter": renderCell,
+            "tooltip": createTooltip,
+            "width": 300
+        },
+        {
+            "title": "Value",
+            "field": "data.value",
+            "formatter": renderCell
+        }
+    ];
+
+    let tableColumns2 = [
+        {
+            "title": "Index",
+            "field": "index",
+            "width": 100
+        },
+        {
+            "title": "Type",
+            "field": "type",
+            "formatter": renderValuePlain,
+            "tooltip": createTooltip,
+            "width": 300
+        },
+        {
+            "title": "Value",
+            "field": "data.value",
+            "formatter": renderValuePlain
+        }
+    ];
+
+    let editor = null;
+
+    let tree = null;
+    var svg = null;
+    var treeData = [
+        {id: "No entry"}];
+    var margin = {top: 20, right: 0, bottom: 20, left: 0},
+        width = 512 - margin.right - margin.left,
+        height = 500 - margin.top - margin.bottom;
+
+    var i = 0, duration = 750;
+    var diagonal = null;
+    let pid = null;
+
+    mainMethod(options);
+
+    function create_UUID() {
+        let dt = new Date().getTime();
+        let uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            let r = (dt + Math.random() * 16) % 16 | 0;
+            dt = Math.floor(dt / 16);
+            return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+        return uuid;
+    }
+
+    function renderCell(selection) {
+        let value = selection._cell.value;
+        // console.log("IDX " + selection._cell.row.cells[0].value);
+        let urlRegEx = new RegExp("(http|https)://(.+)/([A-Za-z0-9.]+)/([A-Za-z0-9.]+)");
+        let pidRegEx = new RegExp("([A-Za-z0-9.]+)/([A-Za-z0-9.]+)");
+        if (urlRegEx.test(value)) {
+            //URL value
+            return "<a href='" + value + "' target='_blank'>" + value + "</a>";
+        } else if (pidRegEx.test(value) && selection._cell.column.field === "data.value") {
+            //PID value
+            //check DataType or not
+            let isFairDO = false;
+            $.ajax({
+                url: "https://hdl.handle.net/api/handles/" + value,
+                async: false,
+                success: function (json, status) {
+                    if (json.values[0].type === "21.T11148/076759916209e5d62bd5") {
+                        //has profile property, is FAIR DO
+                        isFairDO = true;
+                    }
+                }
+            });
+
+            if (isFairDO == false) {
+                //DataType -> redirect to DTR
+                //might be also other PID -> How to check?
+                return "<a href='https://dtr-test.pidconsortium.eu/#objects/" + value + "' target='_blank'>" + value + "</a>";
+            } else {
+                //FAIR DO -> load table from it
+                console.log("Insert " + value);
+                addChildFdo(value, pid);
+                return "<a href='#' onClick=resolveFDO(\'" + value + "\')>" + value + "&nbsp;<i class=\"fa-solid fa-arrow-up-right-from-square\"></i></a>";
+            }
+        }
+
+        //only for type column handling to map PIDs to human-readable type names for known types
+        if (map.has(value)) {
+            let obj = map.get(value);
+            return "<a href='https://dtr-test.pidconsortium.eu/#objects/" + value + "' target='_blank'><i class='" + obj.class + "'>&nbsp;</i>" + obj.name + "</a>";
+        }
+
+        if (typeof value == 'string' && value.startsWith("{")) {
+            let id = create_UUID();
+            new Promise(resolve => {
+                setTimeout(() => {
+                    showEditor(id);
+                    resolve('resolved');
+                }, 1000);
+            });
+
+            return "<div id='" + id + "' style='height:75px'>" + value + "</div>"
+        }
+        return value;
+    }
+
+    function showEditor(id) {
+        let beautify = ace.require("ace/ext/beautify"); // get reference to extension
+        editor = ace.edit(id);
+        //editor.setTheme("ace/theme/monokai");
+        editor.session.setMode("ace/mode/json");
+        beautify.beautify(editor.session);
+    }
+
+    function addChildFdo(fdoPid, parentPid){
+       if(!fdoList.includes(fdoPid)){
+           console.debug("ADD " + fdoPid + " to list");
+           let node = {"id": fdoPid, "parentId": parentPid};
+           treeData.push(node);
+           fdoList.push(fdoPid);
+       }
+        renderTree();
+    }
+
+    function loadPid() {
+        pid = document.getElementById("pid_input").value;
+        fdoList = [pid];
+        console.log("Loading FDO " + pid);
+        treeData = [
+            {
+                "id": pid
+            }
+        ];
+
+        resolveFDO(pid, true);
+        renderTree();
+    }
+
+    function resolveFDO(fdo) {
+        pid = fdo;
+        table.replaceData("https://hdl.handle.net/api/handles/" + fdo);
+    }
+
+    function renderValuePlain(selection) {
+        return selection._cell.value;
+    }
+
+    function createTooltip(event, selection) {
+        return selection._cell.value;
+    }
+
+    function setRenderType(type) {
+        if (type === 1) {
+            $("#plainTypes").removeClass("positive");
+            $("#humanReadableTypes").addClass("positive");
+            table.setColumns(tableColumns);
+        } else {
+            $("#plainTypes").addClass("positive");
+            $("#humanReadableTypes").removeClass("positive");
+            table.setColumns(tableColumns2);
+        }
+    }
+
+    function renderTree(){
+        if(svg) {
+            svg.selectAll('*').remove();
+        }
+        svg = d3.select("svg")
+            .attr("width", width + margin.right + margin.left)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        let root = d3.stratify()(treeData);
+
+        let nodes = tree.nodes(root).reverse(),
+            links = tree.links(nodes);
+
+        // Normalize for fixed-depth.
+        nodes.forEach(function (d) {
+            d.y = 10 + d.depth * 100;
+        });
+
+        // Declare the nodes…
+        let node = svg.selectAll("g.node").data(nodes, function (d) {
+            return d.id || (d.id = ++i);
+        });
+
+        // Enter the nodes.
+        let nodeEnter = node.enter().append("g")
+            .attr("class", "node")
+            .attr("transform", function (d) {
+                return "translate(" + d.x + "," + (10 + d.y) + ")";
+            });
+
+        nodeEnter.append("circle").attr("r", 10).style("fill", "#fff").on("click", click);;
+
+        nodeEnter.append("text").attr("y", function (d) { return d.children || d._children ? -28 : 18; })
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle")
+            .style("font-size","12px")
+            .style("fill-opacity", 1)
+            .text(function (d) {
+                return d.id.split("/")[0];
+            });
+
+        nodeEnter.append("text").attr("y", function (d) { return d.children || d._children ? -28 : 18; })
+            .attr("dy", "1.35em")
+            .attr("text-anchor", "middle")
+            .style("font-size","12px")
+            .style("fill-opacity", 1)
+            .text(function (d) {
+                return d.id.split("/")[1];
+            });
+
+        // Declare the links…
+        let link = svg.selectAll("path.link").data(links, function (d) {
+            return d.target.id;
+        });
+
+        // Enter the links.
+        link.enter().insert("path", "g")
+            .attr("class", "link")
+            .attr("d", diagonal);
+
+       // d3.select(self.frameElement).style("height", "500px");
+    }
+
+    function mainMethod(options) {
+        tree = d3.layout.tree().size([height, width]);
+
+        diagonal = d3.svg.diagonal().projection(function (d) {
+            return [d.x, d.y];
+        });
+
+        renderTree();
+
+        table = new Tabulator("#fairdoscope", {
+            height: "80%", // set height of table (in CSS or here), this enables the Virtual DOM and improves render speed dramatically (can be any valid css height value)
+            ajaxResponse: function (url, params, response) {
+                return response.values;
+            },
+            layout: "fitColumns", //fit columns to width of table (optional)
+            columns: tableColumns,
+        });
+    }
+
+
+    // Toggle children on click.
+    function click(d) {
+       resolveFDO(d.id);
+    }
+</script>
+
+</body>
+</html>
