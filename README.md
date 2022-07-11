@@ -14,7 +14,7 @@ contents of a PID record and a graphical representation of related FAIR DOs.
 * Type-driven rendering of PID record elements
 * Two different ways of rendering PID records (plain or interactive) 
 * Extensible by additional types
-* ON-the-fly creation of FAIR DO graph
+* On-the-fly creation of FAIR DO graph
 
 ### :star: Planned Features
 
@@ -31,11 +31,11 @@ However, it is also possible to run the tool using an arbitrary Web server for p
 
 <img src="/images/screenshot.png" alt="FAIR-DOscope"/>
 
-Using FAIR-DOscope is relatively straightforward. On the upper left you'll find and input field for typing in PIDs of FAIR DOs.
-After clicking the magnifying glass, the PID is resolved, its PID record in presented in the table on the lower left and the 
+Using FAIR-DOscope is relatively straightforward. On the upper left you'll find an input field for typing in PIDs of FAIR DOs.
+After clicking the magnifying glass, the PID is resolved, its PID record is presented in the table on the lower left and the 
 PID graph of (directly) referenced FDOs is drawn to the right. 
 
-You may now click in single nodes in the PID graph to navigate to related FDOs. If new relationships are detected, the graph will
+You may now click a single nodes in the PID graph to navigate to related FDOs. If new relationships are detected, the graph will
 be extended dynamically. Alternatively, opening FDO links (marked with a pointer icon) in the table will have the same effect. 
 Other external links, e.g., links to data types, data, or other digital assets present as URL, are opened in a new browser tab.
 
