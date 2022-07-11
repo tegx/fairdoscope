@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>FAIRDOscope</title>
+    <title>FAIR-DOscope</title>
     <script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.2.7/dist/js/tabulator.min.js"></script>
     <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" type="text/css" href="./css/semantic.min.css">
@@ -32,29 +32,6 @@
     <link href="./css/fontawesome/css/all.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="./css/style.css">
-    <style>
-
-        .node {
-            cursor: pointer;
-        }
-
-        .node circle {
-            fill: #fff;
-            stroke: steelblue;
-            stroke-width: 3px;
-        }
-
-        .node text {
-            font: 12px sans-serif;
-        }
-
-        .link {
-            fill: none;
-            stroke: #ccc;
-            stroke-width: 2px;
-        }
-
-    </style>
 
 </head>
 
@@ -100,7 +77,7 @@
         <h4 class="ui header">
             <i class="sitemap icon"></i>
             <div class="content">
-                FAIR DO Tree
+                FAIR DO Graph
             </div>
         </h4>
         <div class="ui segment" style="min-width: 512px; max-width: 512px">
@@ -113,17 +90,19 @@
 <!-- JS -->
 <script th:inline="javascript">
 
-    let depth = 0;
+    /**List of all processed FDOs currently in the FDO graph*/
     let fdoList = [];
-    /* Fill options with model definitions for metadata record. */
+
+    /**Fill options with model definitions for metadata record. */
     let options = {
         dataModel: null,
         items: null
     };
 
+    /**PID Record table*/
     let table = null;
-    let columnMode = 0;
-    let tableColumns = [
+    /**Table columns for interactive mode*/
+    let interactiveTableColumns = [
         {
             "title": "Index",
             "field": "index",
@@ -143,7 +122,8 @@
         }
     ];
 
-    let tableColumns2 = [
+    /**Table columns for plain mode*/
+    let plainTableColumns = [
         {
             "title": "Index",
             "field": "index",
@@ -163,22 +143,33 @@
         }
     ];
 
+    /**Ace editor instance*/
     let editor = null;
 
+    /**D3 tree containing FDO graph*/
     let tree = null;
-    var svg = null;
-    var treeData = [
+
+    /**Svg element for rendering 'tree' into*/
+    let svg = null;
+
+    /**Tree data object*/
+    let treeData = [
         {id: "No entry"}];
-    var margin = {top: 20, right: 0, bottom: 20, left: 0},
+
+    /**D3 size information*/
+    let margin = {top: 20, right: 0, bottom: 20, left: 0},
         width = 512 - margin.right - margin.left,
         height = 500 - margin.top - margin.bottom;
 
-    var i = 0, duration = 750;
-    var diagonal = null;
+    /**D3 function*/
+    let diagonal = null;
+
+    /**Current root PID (the one entered at the input field)*/
     let pid = null;
 
     mainMethod(options);
 
+    /**UUID creation helper for creating unique instances of Ace editor.*/
     function create_UUID() {
         let dt = new Date().getTime();
         let uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -189,9 +180,13 @@
         return uuid;
     }
 
+    /**Renderer function for PID record table cells. This function is used on the one hand for the type column to
+     * determine the type name obtained from 'js/mappings.js' in interactive mode, on the other hand to render the
+     * value cell for a selection of supported formats, e.g., URL, data type, FDO, and JSON.
+     * @param {string} selection The selected object obtained from the table.
+     */
     function renderCell(selection) {
         let value = selection._cell.value;
-        // console.log("IDX " + selection._cell.row.cells[0].value);
         let urlRegEx = new RegExp("(http|https)://(.+)/([A-Za-z0-9.]+)/([A-Za-z0-9.]+)");
         let pidRegEx = new RegExp("([A-Za-z0-9.]+)/([A-Za-z0-9.]+)");
         if (urlRegEx.test(value)) {
@@ -199,7 +194,6 @@
             return "<a href='" + value + "' target='_blank'>" + value + "</a>";
         } else if (pidRegEx.test(value) && selection._cell.column.field === "data.value") {
             //PID value
-            //check DataType or not
             let isFairDO = false;
             $.ajax({
                 url: "https://hdl.handle.net/api/handles/" + value,
@@ -218,7 +212,6 @@
                 return "<a href='https://dtr-test.pidconsortium.eu/#objects/" + value + "' target='_blank'>" + value + "</a>";
             } else {
                 //FAIR DO -> load table from it
-                console.log("Insert " + value);
                 addChildFdo(value, pid);
                 return "<a href='#' onClick=resolveFDO(\'" + value + "\')>" + value + "&nbsp;<i class=\"fa-solid fa-arrow-up-right-from-square\"></i></a>";
             }
@@ -244,6 +237,9 @@
         return value;
     }
 
+    /**Show a single Ace editor instance for the element with the provided id.
+     * @param {string} id The id (a UUID) of the table cell element to show the editor at.
+     * */
     function showEditor(id) {
         let beautify = ace.require("ace/ext/beautify"); // get reference to extension
         editor = ace.edit(id);
@@ -252,9 +248,13 @@
         beautify.beautify(editor.session);
     }
 
+    /**Add a child FDO. This function is called if the rendering function detects an FDO in one the the value fields of
+     * the PID record. In that case, a new FDO is added to the FDO graph and the graph gets updated.
+     * @param {string} fdoPid The PID of the newly detected FDO.
+     * @param {string} parentPid The PID of the parent FDO.
+     */
     function addChildFdo(fdoPid, parentPid){
        if(!fdoList.includes(fdoPid)){
-           console.debug("ADD " + fdoPid + " to list");
            let node = {"id": fdoPid, "parentId": parentPid};
            treeData.push(node);
            fdoList.push(fdoPid);
@@ -262,10 +262,11 @@
         renderTree();
     }
 
+    /**Callback for the input field triggered if the search is triggered. This function resets the current FDO graph
+     * and triggers the resolution of the FDO.*/
     function loadPid() {
         pid = document.getElementById("pid_input").value;
         fdoList = [pid];
-        console.log("Loading FDO " + pid);
         treeData = [
             {
                 "id": pid
@@ -276,31 +277,50 @@
         renderTree();
     }
 
+    /**Resolve a single FDO. This function sets the current PID to the provided value and triggers a replacement of the
+     * PID record table data.
+     *
+     * @param {string} fdo The PID of the FDO to resolve.
+     * */
     function resolveFDO(fdo) {
         pid = fdo;
         table.replaceData("https://hdl.handle.net/api/handles/" + fdo);
     }
 
+    /**Plain render function basically returning the selection's value.
+     *
+     * @param {object} selection The selection obtained from the table.
+     */
     function renderValuePlain(selection) {
         return selection._cell.value;
     }
 
+    /**Tooltip function basically returning the selection's value.
+     *
+     * @param {object} event The tooltip event.
+     * @param {object} selection The selection obtained from the table.
+     */
     function createTooltip(event, selection) {
         return selection._cell.value;
     }
 
+    /**Switch between the table rendering modes, i.e., plain (0) and interactive (1).
+     *
+     * @param {integer} type The new rendering mode, i.e., plain (0) and interactive (1).
+     */
     function setRenderType(type) {
         if (type === 1) {
             $("#plainTypes").removeClass("positive");
             $("#humanReadableTypes").addClass("positive");
-            table.setColumns(tableColumns);
+            table.setColumns(plainTableColumns);
         } else {
             $("#plainTypes").addClass("positive");
             $("#humanReadableTypes").removeClass("positive");
-            table.setColumns(tableColumns2);
+            table.setColumns(interactiveTableColumns);
         }
     }
 
+    /**Render the current FDO graph.*/
     function renderTree(){
         if(svg) {
             svg.selectAll('*').remove();
@@ -366,6 +386,10 @@
        // d3.select(self.frameElement).style("height", "500px");
     }
 
+    /**Main method initially creating the table and the FDO graph.
+     *
+     * @param {object} options Options object for initializing the table.
+     * */
     function mainMethod(options) {
         tree = d3.layout.tree().size([height, width]);
 
@@ -381,7 +405,7 @@
                 return response.values;
             },
             layout: "fitColumns", //fit columns to width of table (optional)
-            columns: tableColumns,
+            columns: interactiveTableColumns,
         });
     }
 
