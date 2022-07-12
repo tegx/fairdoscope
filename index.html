@@ -11,6 +11,9 @@
             src="https://code.jquery.com/jquery-3.1.1.min.js"
             integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
             crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
+
     <script src="./js/semantic.min.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.7.1/ace.min.js"
@@ -53,12 +56,19 @@
         <i class="search icon"></i>
     </button>
 </div>
+
 <div class="ui buttons">
     <button class="ui button" id="plainTypes" onClick="setRenderType(0)">Plain Record</button>
     <div class="or"></div>
-    <button class="ui positive button active" id="humanReadableTypes" onClick="setRenderType(1)">Interactive
-        Record
-    </button>
+    <button class="ui positive button active" id="humanReadableTypes" onClick="setRenderType(1)">Interactive Record
+</div>
+</button>
+
+<div class="ui vertical animated button" tabindex="0" style="width: 128px">
+    <div class="hidden content" onclick="clearHistory()">Clear History</div>
+    <div class="visible content" >
+        <i class="trash alternate icon"></i>
+    </div>
 </div>
 
 <div class="ui column grid" style="margin-top: 20px">
@@ -84,7 +94,21 @@
             <svg id="tree"/>
         </div>
     </div>
- </div>
+    <div class="fourteen wide column">
+        <h4 class="ui header">
+            <i class="sitemap icon"></i>
+            <div class="content">
+                Messages
+            </div>
+        </h4>
+        <button class="ui primary basic button" onclick="removeMessages(0)">Remove All</button>
+        <button class="ui positive basic button" onclick="removeMessages(1)">Remove Information</button>
+        <button class="ui negative basic button" onclick="removeMessages(2)">Remove Error</button>
+        <div id="messages" class="ui segment">
+
+        </div>
+    </div>
+</div>
 
 
 <!-- JS -->
@@ -92,6 +116,8 @@
 
     /**List of all processed FDOs currently in the FDO graph*/
     let fdoList = [];
+    /**List of all historical FDOs*/
+    let fdoHistory = [];
 
     /**Fill options with model definitions for metadata record. */
     let options = {
@@ -168,6 +194,31 @@
     let pid = null;
 
     mainMethod(options);
+
+    function addMessage(type, message) {
+        let element = $("#messages");
+        let div = document.createElement('div');
+        let messageType = "positive";
+        let messageHeader = "Information";
+        switch (type) {
+            case 1: {
+                messageType = "negative";
+                messageHeader = "Error";
+            }
+        }
+
+        let uuid = create_UUID();
+        div.setAttribute("class", "ui " + messageType + " message");
+        div.setAttribute("id", uuid);
+        div.innerHTML =
+            "<i class='close icon' onclick='closeMessage(\"" + uuid + "\")'></i>" +
+            "<div class='header'>" +
+            messageHeader +
+            "</div>" +
+            "<p>" + message + "</p>";
+
+        element.prepend(div);
+    }
 
     /**UUID creation helper for creating unique instances of Ace editor.*/
     function create_UUID() {
@@ -253,12 +304,18 @@
      * @param {string} fdoPid The PID of the newly detected FDO.
      * @param {string} parentPid The PID of the parent FDO.
      */
-    function addChildFdo(fdoPid, parentPid){
-       if(!fdoList.includes(fdoPid)){
-           let node = {"id": fdoPid, "parentId": parentPid};
-           treeData.push(node);
-           fdoList.push(fdoPid);
-       }
+    function addChildFdo(fdoPid, parentPid) {
+        if (!fdoList.includes(fdoPid)) {
+            let node = {"id": fdoPid, "parentId": parentPid};
+            treeData.push(node);
+            fdoList.push( fdoPid );
+        }
+
+        if(!fdoHistory.includes(fdoPid)) {
+            fdoHistory.push(fdoPid);
+            localStorage.setItem("fdoHistory", JSON.stringify(fdoHistory));
+        }
+
         renderTree();
     }
 
@@ -266,7 +323,13 @@
      * and triggers the resolution of the FDO.*/
     function loadPid() {
         pid = document.getElementById("pid_input").value;
+        addMessage(0, "Loading FDO from user-provided PID " + pid);
         fdoList = [pid];
+        if (!fdoHistory.includes(pid)) {
+            fdoHistory.push(pid);
+            localStorage.setItem("fdoHistory", JSON.stringify(fdoHistory));
+        }
+
         treeData = [
             {
                 "id": pid
@@ -283,6 +346,7 @@
      * @param {string} fdo The PID of the FDO to resolve.
      * */
     function resolveFDO(fdo) {
+        addMessage(0, "Resolving new FDO with PID " + fdo);
         pid = fdo;
         table.replaceData("https://hdl.handle.net/api/handles/" + fdo);
     }
@@ -310,10 +374,13 @@
      */
     function setRenderType(type) {
         if (type === 1) {
+            addMessage(0, "Setting rendering to <b>interactive</b> mode.");
+
             $("#plainTypes").removeClass("positive");
             $("#humanReadableTypes").addClass("positive");
             table.setColumns(interactiveTableColumns);
         } else {
+            addMessage(0, "Setting rendering to <b>plain</b> mode.");
             $("#plainTypes").addClass("positive");
             $("#humanReadableTypes").removeClass("positive");
             table.setColumns(plainTableColumns);
@@ -321,8 +388,8 @@
     }
 
     /**Render the current FDO graph.*/
-    function renderTree(){
-        if(svg) {
+    function renderTree() {
+        if (svg) {
             svg.selectAll('*').remove();
         }
         svg = d3.select("svg")
@@ -353,21 +420,26 @@
                 return "translate(" + d.x + "," + (10 + d.y) + ")";
             });
 
-        nodeEnter.append("circle").attr("r", 10).style("fill", "#fff").on("click", click);;
+        nodeEnter.append("circle").attr("r", 10).style("fill", "#fff").on("click", click);
+        ;
 
-        nodeEnter.append("text").attr("y", function (d) { return d.children || d._children ? -28 : 18; })
+        nodeEnter.append("text").attr("y", function (d) {
+            return d.children || d._children ? -28 : 18;
+        })
             .attr("dy", ".35em")
             .attr("text-anchor", "middle")
-            .style("font-size","12px")
+            .style("font-size", "12px")
             .style("fill-opacity", 1)
             .text(function (d) {
                 return d.id.split("/")[0];
             });
 
-        nodeEnter.append("text").attr("y", function (d) { return d.children || d._children ? -28 : 18; })
+        nodeEnter.append("text").attr("y", function (d) {
+            return d.children || d._children ? -28 : 18;
+        })
             .attr("dy", "1.35em")
             .attr("text-anchor", "middle")
-            .style("font-size","12px")
+            .style("font-size", "12px")
             .style("fill-opacity", 1)
             .text(function (d) {
                 return d.id.split("/")[1];
@@ -383,7 +455,7 @@
             .attr("class", "link")
             .attr("d", diagonal);
 
-       // d3.select(self.frameElement).style("height", "500px");
+        // d3.select(self.frameElement).style("height", "500px");
     }
 
     /**Main method initially creating the table and the FDO graph.
@@ -391,6 +463,17 @@
      * @param {object} options Options object for initializing the table.
      * */
     function mainMethod(options) {
+        if(localStorage.getItem("fdoHistory")){
+            let historicalData = JSON.parse(localStorage.getItem("fdoHistory"));
+            for (let i = 0; i < historicalData.length; i++) {
+                fdoHistory.push(historicalData[i]);
+            }
+            addMessage(0, "Loaded " + fdoHistory.length  + " PIDs from history.");
+        }
+
+        $( "#pid_input" ).autocomplete({
+            source: fdoHistory
+        });
         tree = d3.layout.tree().size([height, width]);
 
         diagonal = d3.svg.diagonal().projection(function (d) {
@@ -407,12 +490,44 @@
             layout: "fitColumns", //fit columns to width of table (optional)
             columns: interactiveTableColumns,
         });
+
+        table.on("dataLoadError", function (error) {
+            addMessage(1, "Failed to load FDO from " + error.url + " (Status: " + error.status + ")");
+        });
     }
 
+    /**Callback for closing a single message.
+     * @param {string} id UUID of the message to close.
+     */
+    function closeMessage(id) {
+        $("#" + id).remove();
+    }
+
+    /**Callback for message removal buttons.
+     * @param {integer} type Message type to remove (0=all, 1=information, 2=error)
+     */
+    function removeMessages(type) {
+        switch (type) {
+            case 0:
+                $("#messages .message").remove();
+                return;
+            case 1:
+                $("#messages .positive").remove();
+                return;
+            case 2:
+                $("#messages .negative").remove();
+                return;
+        }
+    }
+
+    function clearHistory(){
+        localStorage.removeItem("fdoHistory");
+        addMessage(0, "History cleared.");
+    }
 
     // Toggle children on click.
     function click(d) {
-       resolveFDO(d.id);
+        resolveFDO(d.id);
     }
 </script>
 
