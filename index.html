@@ -312,11 +312,11 @@
         if (type === 1) {
             $("#plainTypes").removeClass("positive");
             $("#humanReadableTypes").addClass("positive");
-            table.setColumns(plainTableColumns);
+            table.setColumns(interactiveTableColumns);
         } else {
             $("#plainTypes").addClass("positive");
             $("#humanReadableTypes").removeClass("positive");
-            table.setColumns(interactiveTableColumns);
+            table.setColumns(plainTableColumns);
         }
     }
 
