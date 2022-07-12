@@ -6,11 +6,6 @@
     cursor: pointer;
 }
 
-.node circle {
-    fill: #fff;
-    stroke: steelblue;
-    stroke-width: 3px;
-}
 
 .node text {
     font: 12px sans-serif;
