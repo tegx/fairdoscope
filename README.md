@@ -10,22 +10,24 @@ contents of a PID record and a graphical representation of related FAIR DOs.
 
 ### :white_check_mark: Features
 
-* Can be used standalone in your Web browser
+* Portable - Can be used standalone in your Web browser or hosted on a Web server
 * Type-driven rendering of PID record elements
+* Search history functionality including suggestion mode for PID input
 * Two different ways of rendering PID records (plain or interactive) 
 * Extensible by additional types
 * On-the-fly creation of FAIR DO graph
 
 ### :star: Planned Features
 
-* History functionality including suggestion mode for PID input
 * Rendering of additional information in FAIR DO graph, e.g., record preview
 * Optional integration of FDO search index as backend service for PID input
 
 ## How to start
 
 FAIR-DOscope is implemented as single Web page. It can be viewed in any Web browser by opening `index.html` locally. 
-However, it is also possible to run the tool using an arbitrary Web server for public access from the internet. 
+However, it is also possible to run the tool using an arbitrary Web server for public access from the internet. In case
+you want to try FAIR-DOscrope out just now, just continue to the project's [GitHub Pages](https://kit-data-manager.github.io/fairdoscope/)
+to see it running.
 
 ## Usage 
 
