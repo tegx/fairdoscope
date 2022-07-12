@@ -14,3 +14,4 @@ map.set("21.T11148/1a73af9e7ae00182733b", {'name': 'contact', 'class':'fa-solid 
 //AI
 map.set("21.T11148/59071da0d09ae46f1126", {'name': 'label', 'class':'fa-solid fa-tag'});
 map.set("21.T11148/bca3915764ce207253f5", {'name': 'imageFormat', 'class':'fa-solid fa-image'});
+map.set("21.T11148/49330041ca5fddf9af92", {'name': 'schemaLocation', 'class':'fa-solid fa-file-circle-exclamation'});
