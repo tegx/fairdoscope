@@ -1,21 +1,13 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html>
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>FAIR-DOscope</title>
     <script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.2.7/dist/js/tabulator.min.js"></script>
     <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="./css/semantic.min.css">
-    <script
-            src="https://code.jquery.com/jquery-3.1.1.min.js"
-            integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
-            crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
-
     <script src="./js/semantic.min.js"></script>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.7.1/ace.min.js"
             integrity="sha512-7Jmn5XgQKvX7kd2yARvOywZYQfC6eB7WLLdpWfGifPHe+93PwGf2BpkrX/vPRgPxllivNDnD8TSMHpYb60opMg=="
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -25,19 +17,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.7.1/ext-beautify.min.js"
             integrity="sha512-uXfi0GwpQZcHIhGOMMHeNYtBSjt7qDXjXHmjShWSp+RWMSmjdy69N7M/pufinvQLv6rSYlpbSXqSnLRzWE952w=="
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-    <link href="https://unpkg.com/tabulator-tables@5.2.7/dist/css/tabulator_materialize.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3-hierarchy@3"></script>
 
     <script src="./js/mappings.js"></script>
 
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
+    <link href="https://unpkg.com/tabulator-tables@5.2.7/dist/css/tabulator_materialize.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="./css/semantic.min.css">
     <link href="./css/fontawesome/css/all.min.css" rel="stylesheet">
-
     <link rel="stylesheet" href="./css/style.css">
 
 </head>
-
 
 <body>
 
@@ -105,7 +96,7 @@
         <button class="ui positive basic button" onclick="removeMessages(1)">Remove Information</button>
         <button class="ui negative basic button" onclick="removeMessages(2)">Remove Error</button>
         <div id="messages" class="ui segment">
-
+            //messages will go here
         </div>
     </div>
 </div>
@@ -220,7 +211,7 @@
         element.prepend(div);
     }
 
-    /**UUID creation helper for creating unique instances of Ace editor.*/
+    /**UUID creation helper for creating unique instances of Ace editor and message elements.*/
     function create_UUID() {
         let dt = new Date().getTime();
         let uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -293,7 +284,7 @@
 
     /**Show a single Ace editor instance for the element with the provided id.
      * @param {string} id The id (a UUID) of the table cell element to show the editor at.
-     * */
+     */
     function showEditor(id) {
         let beautify = ace.require("ace/ext/beautify"); // get reference to extension
         editor = ace.edit(id);
@@ -323,7 +314,8 @@
     }
 
     /**Callback for the input field triggered if the search is triggered. This function resets the current FDO graph
-     * and triggers the resolution of the FDO.*/
+     * and triggers the resolution of the FDO.
+     */
     function loadPid() {
         pid = document.getElementById("pid_input").value;
         let isFairDO = false;
@@ -367,7 +359,7 @@
      * PID record table data.
      *
      * @param {string} fdo The PID of the FDO to resolve.
-     * */
+     */
     function resolveFDO(fdo) {
         addMessage(0, "Resolving new FDO with PID " + fdo);
         pid = fdo;
@@ -447,6 +439,7 @@
                 return "translate(" + d.x + "," + (10 + d.y) + ")";
             });
 
+        //draw nodes
         nodeEnter.append("circle").attr("r", 10).attr('stroke-width', 1).attr("stroke", function(d){
             if(d.id === pid){
                 return "red"
@@ -457,7 +450,7 @@
             return profiles.get(d.data.profilePid) ? profiles.get(d.data.profilePid):"#fff";
         }).on("click", click);
 
-
+        //add labels to nodes
         nodeEnter.append("text").attr("y", function (d) {
             return d.children || d._children ? -28 : 18;
         })
@@ -489,14 +482,12 @@
         link.enter().insert("path", "g")
             .attr("class", "link")
             .attr("d", diagonal);
-
-        // d3.select(self.frameElement).style("height", "500px");
     }
 
     /**Main method initially creating the table and the FDO graph.
      *
      * @param {object} options Options object for initializing the table.
-     * */
+     */
     function mainMethod(options) {
         if(localStorage.getItem("fdoHistory")){
             let historicalData = JSON.parse(localStorage.getItem("fdoHistory"));
