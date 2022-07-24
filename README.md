@@ -26,7 +26,7 @@ contents of a PID record and a graphical representation of related FAIR DOs.
 
 FAIR-DOscope is implemented as single Web page. It can be viewed in any Web browser by opening `index.html` locally. 
 However, it is also possible to run the tool using an arbitrary Web server for public access from the internet. In case
-you want to try FAIR-DOscrope out just now, just continue to the project's [GitHub Pages](https://kit-data-manager.github.io/fairdoscope/)
+you want to try FAIR-DOscope out just now, just continue to the project's [GitHub Pages](https://kit-data-manager.github.io/fairdoscope/)
 to see it running.
 
 ## Usage 
