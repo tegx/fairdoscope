@@ -43,7 +43,7 @@
 <div class="ui action input">
     <input id="pid_input" style="width: 428px" type="text"
            value="21.T11981/6ab464ed-978b-4996-876f-f68ea913a308" placeholder="Search...">
-    <button class="ui icon button" onClick="loadPid()">
+    <button id="show-fdo-button" class="ui icon button" onClick="loadPid()">
         <i class="search icon"></i>
     </button>
 </div>
@@ -96,7 +96,7 @@
         <button class="ui positive basic button" onclick="removeMessages(1)">Remove Information</button>
         <button class="ui negative basic button" onclick="removeMessages(2)">Remove Error</button>
         <div id="messages" class="ui segment">
-            //messages will go here
+            <!--messages will go here-->
         </div>
     </div>
 </div>
@@ -104,6 +104,10 @@
 
 <!-- JS -->
 <script th:inline="javascript">
+
+    let currentUrl = window.location.href;
+    let url = new URL(currentUrl);
+    let userProvidedPid = url.searchParams.get("pid");
 
     /**List of all processed FDOs currently in the FDO graph*/
     let fdoList = [];
@@ -183,8 +187,6 @@
 
     /**Current root PID (the one entered at the input field)*/
     let pid = null;
-
-    mainMethod(options);
 
     function addMessage(type, message) {
         let element = $("#messages");
@@ -363,8 +365,11 @@
     function resolveFDO(fdo) {
         addMessage(0, "Resolving new FDO with PID " + fdo);
         pid = fdo;
-        table.replaceData("https://hdl.handle.net/api/handles/" + fdo);
-        renderTree();
+        table.replaceData("https://hdl.handle.net/api/handles/" + fdo).then(function(){
+            renderTree();
+        }).catch(function(error){
+            addMessage(1, "Failed to load FDO record from https://hdl.handle.net/api/handles/" + fdo);
+        });
     }
 
     /**Plain render function basically returning the selection's value.
@@ -484,6 +489,9 @@
             .attr("d", diagonal);
     }
 
+ mainMethod(options);
+
+
     /**Main method initially creating the table and the FDO graph.
      *
      * @param {object} options Options object for initializing the table.
@@ -520,6 +528,14 @@
         table.on("dataLoadError", function (error) {
             addMessage(1, "Failed to load FDO from " + error.url + " (Status: " + error.status + ")");
         });
+        table.on("tableBuilt", function (error) {
+        if (userProvidedPid) {
+            addMessage(0, "Loading PID " + userProvidedPid + " from query parameter.");
+            $("#pid_input").attr("value", userProvidedPid);            
+            loadPid();
+        }
+        });
+ 
     }
 
     /**Callback for closing a single message.
