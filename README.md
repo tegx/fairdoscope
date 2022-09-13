@@ -22,6 +22,12 @@ contents of a PID record and a graphical representation of related FAIR DOs.
 * Rendering of additional information in FAIR DO graph, e.g., record preview
 * Optional integration of FDO search index as backend service for PID input
 
+### :grey_exclamation: Limitations
+
+* Currently, only FAIR DOs following the RDA Recommendations ([Weigel et al.](https://doi.org/10.15497/rda00031)) are properly detected. This requires, that the first key of the PID Record has the value [21.T11148/076759916209e5d62bd5](https://dtr-test.pidconsortium.eu/#objects/21.T11148/076759916209e5d62bd5).
+* Currently, only PIDs resolvable via [https://handle.net/](https://handle.net/) are supported
+* Data Type resolution is based on the Data Type Registry testing instance hosted at GWDG (see [https://dtr-test.pidconsortium.eu/](https://dtr-test.pidconsortium.eu/))
+
 ## How to start
 
 FAIR-DOscope is implemented as single Web page. It can be viewed in any Web browser by opening `index.html` locally. 
