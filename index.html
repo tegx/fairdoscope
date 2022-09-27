@@ -224,14 +224,18 @@
         return uuid;
     }
 
+
+
+
     /**Renderer function for PID record table cells. This function is used on the one hand for the type column to
      * determine the type name obtained from 'js/mappings.js' in interactive mode, on the other hand to render the
      * value cell for a selection of supported formats, e.g., URL, data type, FDO, and JSON.
      * @param {string} selection The selected object obtained from the table.
      */
     function renderCell(selection) {
+       // let type = selection._cell.row.cells[1].value;
         let value = selection._cell.value;
-        let urlRegEx = new RegExp("(http|https)://(.+)/([A-Za-z0-9.]+)/([A-Za-z0-9.]+)");
+        let urlRegEx = new RegExp("(http|https):\\/\\/(.+)");
         let pidRegEx = new RegExp("([A-Za-z0-9.]+)/([A-Za-z0-9.]+)");
         if (urlRegEx.test(value)) {
             //URL value
@@ -244,11 +248,12 @@
                 url: "https://hdl.handle.net/api/handles/" + value,
                 async: false,
                 success: function (json, status) {
-                    //TODO: add fault tolerance in case profile is not at index 0
-                    if (json.values[0].type === "21.T11148/076759916209e5d62bd5") {
-                        //has profile property, is FAIR DO
-                        profilePid = json.values[0].data.value;
-                        isFairDO = true;
+                      for(let i=0;i<json.values.length;i++){
+                        if (json.values[i].type === "21.T11148/076759916209e5d62bd5") {
+                            //has profile property, is FAIR DO
+                            profilePid = json.values[i].data.value;
+                            isFairDO = true;
+                        }
                     }
                 }
             });
@@ -283,6 +288,14 @@
         }
         return value;
     }
+
+
+
+
+
+
+
+
 
     /**Show a single Ace editor instance for the element with the provided id.
      * @param {string} id The id (a UUID) of the table cell element to show the editor at.
