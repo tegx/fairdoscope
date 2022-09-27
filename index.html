@@ -326,11 +326,12 @@
             url: "https://hdl.handle.net/api/handles/" + pid,
             async: false,
             success: function (json, status) {
-                //TODO: add fault tolerance in case profile is not at index 0
-                if (json.values[0].type === "21.T11148/076759916209e5d62bd5") {
-                    //has profile property, is FAIR DO
-                    profilePid = json.values[0].data.value;
-                    isFairDO = true;
+                for(let i=0;i<json.values.length;i++){
+                    if (json.values[i].type === "21.T11148/076759916209e5d62bd5") {
+                        //has profile property, is FAIR DO
+                        profilePid = json.values[i].data.value;
+                        isFairDO = true;
+                    }
                 }
             }
         });
@@ -391,7 +392,7 @@
 
     /**Switch between the table rendering modes, i.e., plain (0) and interactive (1).
      *
-     * @param {integer} type The new rendering mode, i.e., plain (0) and interactive (1).
+     * @param {number} type The new rendering mode, i.e., plain (0) and interactive (1).
      */
     function setRenderType(type) {
         if (type === 1) {
