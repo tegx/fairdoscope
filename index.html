@@ -233,9 +233,23 @@
      * @param {string} selection The selected object obtained from the table.
      */
     function renderCell(selection) {
-       // let type = selection._cell.row.cells[1].value;
+
         let value = selection._cell.value;
-        let urlRegEx = new RegExp("(http|https):\\/\\/(.+)");
+
+        if(selection._cell.column.field == "type"){
+            if (dataTypes.has(value)) {
+                let obj = dataTypes.get(value);
+                return "<a href='https://dtr-test.pidconsortium.eu/#objects/" + value + "' target='_blank'><i class='" + obj.class + "'>&nbsp;</i>" + obj.name + "</a>";
+            }
+        }else if(selection._cell.column.field == "data.value"){
+            let type = selection._cell.row.cells[1].value;
+            if (dataTypes.has(type)) {
+                let obj = dataTypes.get(type);
+                return obj.renderer(value);
+            }
+        }
+
+       /* let urlRegEx = new RegExp("(http|https):\\/\\/(.+)");
         let pidRegEx = new RegExp("([A-Za-z0-9.]+)/([A-Za-z0-9.]+)");
         if (urlRegEx.test(value)) {
             //URL value
@@ -267,10 +281,10 @@
                 addChildFdo(value, profilePid, pid);
                 return "<a href='#' onClick=resolveFDO(\'" + value + "\')>" + value + "&nbsp;<i class=\"fa-solid fa-arrows-rotate\"></i></a>";
             }
-        }
+        }*/
 
         //only for type column handling to map PIDs to human-readable type names for known types
-        if (dataTypes.has(value)) {
+      /*  if (dataTypes.has(value)) {
             let obj = dataTypes.get(value);
             return "<a href='https://dtr-test.pidconsortium.eu/#objects/" + value + "' target='_blank'><i class='" + obj.class + "'>&nbsp;</i>" + obj.name + "</a>";
         }
@@ -285,7 +299,7 @@
             });
 
             return "<div id='" + id + "' style='height:75px'>" + value + "</div>"
-        }
+        }*/
         return value;
     }
 
@@ -314,6 +328,7 @@
      * @param {string} parentPid The PID of the parent FDO.
      */
     function addChildFdo(fdoPid, profile, parentPid) {
+        addMessage("Adding child FDO with pid " + fdoPid + " to parent " + parentPid);
         if (!fdoList.includes(fdoPid)) {
             let node = {"id": fdoPid, "parentId": parentPid, "profilePid": profile};
             treeData.push(node);
@@ -351,7 +366,8 @@
 
         if(!isFairDO){
             addMessage(1, "Provided PID " + pid + " is no FDO.");
-            return;
+            //continue and try to deal with it somehow
+            // return;
         }
 
         addMessage(0, "Loading FDO from user-provided PID " + pid);
