@@ -17,12 +17,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.7.1/ext-beautify.min.js"
             integrity="sha512-uXfi0GwpQZcHIhGOMMHeNYtBSjt7qDXjXHmjShWSp+RWMSmjdy69N7M/pufinvQLv6rSYlpbSXqSnLRzWE952w=="
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7.6.1/dist/d3.min.js"></script>
 
     <script src="./js/mappings.js"></script>
-    <script src="./js/miserables.js"></script>
-    <script src="./js/ForceGraph.js"></script>
+    <script src="./js/ArcGraph.js"></script>
 
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
     <link href="https://unpkg.com/tabulator-tables@5.2.7/dist/css/tabulator_materialize.min.css" rel="stylesheet">
@@ -175,9 +173,6 @@
     /**Svg element for rendering 'tree' into*/
     let svg = null;
 
-    /**Tree data object*/
-    let treeData = [
-        {id: "No entry"}];
 
     /**D3 size information*/
     let margin = {top: 20, right: 0, bottom: 20, left: 0},
@@ -225,7 +220,8 @@
         addMessage("Adding child FDO with pid " + fdoPid + " to parent " + parentPid);
 
         let existing = data.nodes.find((entry) => entry.id == fdoPid);
-    let modified = false;
+        let modified = false;
+
         if(!existing){
             let node = {"id":fdoPid, "profile": profile};
             data.nodes.push(node);
@@ -234,20 +230,20 @@
             data.links.push(link);
             modified = true;
         }else{
-            let existingConnection = data.links.find((entry) => (entry.source == parentPid && entry.target == fdoPid) || (entry.target == parentPid && entry.source == fdoPid));
+            let existingConnection = data.links.find((entry) => (entry.source == parentPid && entry.target == fdoPid));
 
             if(!existingConnection){
                 let typeName = (dataTypes.get(type))?dataTypes.get(type).name:type;
                 let link = {"source":parentPid, "target":fdoPid, "type": typeName, "value":1};
                 data.links.push(link);
                 modified = true;
-            }else{
+            }/*else{
                 let nextTypeName = (dataTypes.get(type))?dataTypes.get(type).name:type;
                 if(existingConnection.type.indexOf(nextTypeName) == -1) {
                     existingConnection.type = existingConnection.type + " | " + nextTypeName;
                     modified = true;
                 }
-            }
+            }*/
         }
 
         if(!fdoHistory.includes(fdoPid)) {
@@ -289,25 +285,18 @@
 
         addMessage(0, "Loading FDO from user-provided PID " + pid);
 
-
-        let existing = data.nodes.find((entry) => entry.id == pid);
-
-        if(!existing){
+        // let existing = data.nodes.find((entry) => entry.id == pid);
+        // if(!existing){
+            //reset data
+            data = {"nodes":[], "links":[]};
             let node = {"id":pid, "profile": profilePid};
             data.nodes.push(node);
-        }
+        // }
 
         if (!fdoHistory.includes(pid)) {
             fdoHistory.push(pid);
             localStorage.setItem("fdoHistory", JSON.stringify(fdoHistory));
         }
-
-        treeData = [
-            {
-                "id": pid,
-                "profilePid": profilePid
-            }
-        ];
 
         resolveFDO(pid);
     }
@@ -325,6 +314,8 @@
           /*if (!existing) {
                renderTree();
           }*/
+         renderTree();
+
         }).catch(function(error){
             addMessage(1, "Failed to load FDO record from https://hdl.handle.net/api/handles/" + fdo);
         });
@@ -374,14 +365,15 @@
     /**Render the current FDO graph.*/
     function renderTree() {
        d3.select("svg").selectAll('*').remove();
-        ForceGraph(data, {
+       //ForceGraph
+       ArcGraph(data, {
             nodeId: d => d.id,
             nodeGroup: d => d.profile,
             nodeTitle: d => createFdoNodeName(d),
             linkStrokeWidth: l => Math.sqrt(l.value),
             width,
             height: 600,
-           undefined
+            undefined
         });
     }
 
