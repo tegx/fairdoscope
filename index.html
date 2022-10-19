@@ -22,6 +22,9 @@
     <script src="./js/mappings.js"></script>
     <script src="./js/ArcGraph.js"></script>
 
+    <script src="./js/semantic-ui/transition.js"></script>
+    <script src="./js/semantic-ui/dropdown.js"></script>
+
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
     <link href="https://unpkg.com/tabulator-tables@5.2.7/dist/css/tabulator_materialize.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="./css/semantic.min.css">
@@ -76,6 +79,26 @@
     </div>
     <div class="five wide column">
         <h4 class="ui header">
+            <i class="tag icon"></i>
+            <div class="content">
+                FDO Badge
+            </div>
+        </h4>
+        <div class="ui segment" style="min-width: 512px; max-width: 512px">
+            <div style="margin-left:-4px" id="badges">
+            </div>
+
+            <div class="ui floating dropdown labeled icon button">
+                <i class="copy icon"></i>
+                <span class="text">Copy as</span>
+                <div class="menu">
+                    <div class="item">HTML</div>
+                    <div class="item">Markdown</div>
+                </div>
+            </div>
+
+        </div>
+        <h4 class="ui header">
             <i class="sitemap icon"></i>
             <div class="content">
                 FAIR DO Graph
@@ -84,6 +107,7 @@
         <div class="ui segment" style="min-width: 512px; max-width: 512px">
             <svg id="tree"/>
         </div>
+
     </div>
     <div class="fourteen wide column">
         <h4 class="ui header">
@@ -104,6 +128,7 @@
 
 <!-- JS -->
 <script th:inline="javascript">
+    const logo_encoded = "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";
 
     let currentUrl = window.location.href;
     let url = new URL(currentUrl);
@@ -186,6 +211,46 @@
     let pid = null;
 
     let data = {"nodes":[], "links":[]};
+
+    function getBadgeElement(pid, type){
+        let badgeUrl = "https://img.shields.io/badge/FAIR%20DO-" + encodeURIComponent(pid).replaceAll("-", "--") + "-green?logo=data:image/png;base64," + logo_encoded;
+        let result = undefined;
+
+        let targetUrl = window.location.href + "?pid=" + pid;
+
+        if(type == "html"){
+            result = "<a href='" + targetUrl + "'><img src='" + badgeUrl + "'></img></a>";
+        }else  if(type == "markdown"){
+            result = "[(![FAIRDO](" + badgeUrl + ")](" + targetUrl + ")";
+        }
+        return result;
+    }
+
+    function createDummyBadge(){
+        let badgeUrl = "https://img.shields.io/badge/FAIR%20DO-nothing%20selected-orange?logo=data:image/png;base64," + logo_encoded;
+
+        let html = "<a href='" + pid + "'><img src='" + badgeUrl + "'></img></a>";
+
+        $("#badges").empty();
+        $("#badges").append(html);
+    }
+
+    function createBadge(pid){
+        $("#badges").empty();
+        $("#badges").append(getBadgeElement(pid, "html"));
+    }
+
+    $('.ui.dropdown').dropdown({
+        action: 'hide',
+        onChange: function(value, text, selectedItem) {
+
+            navigator.clipboard.writeText(getBadgeElement(pid, value)).then(function() {
+                addMessage(0, "Badge copied to clipboard.");
+            }, function(err) {
+                addMessage(1, "Failed to copy badge clipboard.");
+            });
+        }
+    });
 
 
     /**Renderer function for PID record table cells. This function is used on the one hand for the type column to
@@ -297,7 +362,6 @@
             fdoHistory.push(pid);
             localStorage.setItem("fdoHistory", JSON.stringify(fdoHistory));
         }
-
         resolveFDO(pid);
     }
 
@@ -315,7 +379,7 @@
                renderTree();
           }*/
          renderTree();
-
+         createBadge(pid);
         }).catch(function(error){
             addMessage(1, "Failed to load FDO record from https://hdl.handle.net/api/handles/" + fdo);
         });
@@ -397,6 +461,7 @@
             source: fdoHistory
         });
 
+        createDummyBadge();
         renderTree();
 
         table = new Tabulator("#fairdoscope", {
