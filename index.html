@@ -221,7 +221,7 @@
         if(type == "html"){
             result = "<a href='" + targetUrl + "'><img src='" + badgeUrl + "'></img></a>";
         }else  if(type == "markdown"){
-            result = "[(![FAIRDO](" + badgeUrl + ")](" + targetUrl + ")";
+            result = "[![FAIRDO](" + badgeUrl + ")](" + targetUrl + ")";
         }
         return result;
     }
