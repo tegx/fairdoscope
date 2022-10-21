@@ -216,7 +216,11 @@
         let badgeUrl = "https://img.shields.io/badge/FAIR%20DO-" + encodeURIComponent(pid).replaceAll("-", "--") + "-green?logo=data:image/png;base64," + logo_encoded;
         let result = undefined;
 
-        let targetUrl = window.location.href + "?pid=" + pid;
+
+        let url = new URL(window.location.href);
+        url.searchParams["pid"] = pid;
+
+        let targetUrl = url.toString();
 
         if(type == "html"){
             result = "<a href='" + targetUrl + "'><img src='" + badgeUrl + "'></img></a>";
