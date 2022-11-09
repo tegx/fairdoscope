@@ -116,3 +116,6 @@ $RECYCLE.BIN/
 *.lnk
 ##################
 
+node_modules
+package-lock.json
+dist
