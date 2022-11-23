@@ -1,7 +1,7 @@
 import { ColumnDefinition, Tabulator } from 'tabulator-tables';
 import { createTooltip, renderCell, renderValuePlain } from './ColumnHelpers';
-import { RecordEntry } from '../fdosource/record-entry';
-import { getPIDRecord } from '../fdosource/fdosource';
+import { HandleRecordValue } from '../../services/handleapi/handle-record-entry';
+import { getPIDRecord } from '../../services/handleapi/handleapi';
 import * as tabulatorStyles from "!!to-string-loader!css-loader!tabulator-tables/dist/css/tabulator.min.css";
 
 /** Table columns for interactive mode */
@@ -88,7 +88,7 @@ export class RecordTable extends HTMLElement {
 
     private handlePIDUpdate() {
         getPIDRecord(this.pid)
-            .then((entries: RecordEntry[]) => {
+            .then((entries: HandleRecordValue[]) => {
                 if (!this.tableIsBuild || !this.tabulator) return;
                 this.tabulator.setData(entries);
             });

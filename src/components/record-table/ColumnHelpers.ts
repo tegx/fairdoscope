@@ -1,5 +1,5 @@
 import { CellComponent } from "tabulator-tables";
-import { dataTypes } from "../mappings";
+import { dataTypes } from "../../mappings";
 
 /**
  * Renderer function for PID record table cells. This function is used on the one hand for the type column to

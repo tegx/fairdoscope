@@ -1,1 +1,1 @@
-export * from "./record-table/RecordTable";
+export * from "./components/record-table/RecordTable";
