@@ -1,5 +1,7 @@
 import { ColumnDefinition, Tabulator } from 'tabulator-tables';
 import { createTooltip, renderCell, renderValuePlain } from './ColumnHelpers';
+import { RecordEntry } from '../fdosource/record-entry';
+import { getPIDRecord } from '../fdosource/fdosource';
 import * as tabulatorStyles from "!!to-string-loader!css-loader!tabulator-tables/dist/css/tabulator.min.css";
 
 /** Table columns for interactive mode */
@@ -44,22 +46,12 @@ export const PLAIN_COLUMNS: ColumnDefinition[] = [
     }
 ];
 
-export interface RecordEntry {
-    type: string;
-    index: number;
-    data: {
-        value: any;
-        format: string;
-    },
-    ttl: number;
-    timestamp: string;
-}
 
 export class RecordTable extends HTMLElement {
     /** >>> HTML ATTRIBUTES */
-    public recordEntries: RecordEntry[] = [];
     public interactiveCols: boolean = false;
     public height: number = 0;
+    public pid: string = "";
     /** <<< HTML ATTRIBUTES */
     private tabulatorElement: HTMLDivElement;
     private tabulator: Tabulator|null = null;
@@ -75,13 +67,14 @@ export class RecordTable extends HTMLElement {
     }
     
     public static get observedAttributes() {
-        return ["record-entries", "interactive-cols", "height"];
+        return ["pid", "interactive-cols", "height"];
     }
 
     public attributeChangedCallback(name: string, oldValue: string, newValue: string) {
         switch (name) {
-            case "record-entries":
-                this.recordEntries = JSON.parse(newValue);
+            case "pid":
+                this.pid = newValue;
+                if (oldValue !== newValue) this.handlePIDUpdate();
                 break;
             case "interactive-cols":
                 this.interactiveCols = !!newValue;
@@ -93,29 +86,39 @@ export class RecordTable extends HTMLElement {
         this.updateTable();
     }
 
+    private handlePIDUpdate() {
+        getPIDRecord(this.pid)
+            .then((entries: RecordEntry[]) => {
+                if (!this.tableIsBuild || !this.tabulator) return;
+                this.tabulator.setData(entries);
+            });
+    }
+
     private updateTable() {
         if (!this.tableIsBuild || !this.tabulator) return;
         this.tabulator.setColumns(this.interactiveCols ? INTERACTIVE_COLUMNS : PLAIN_COLUMNS);
-        this.tabulator.setData(this.recordEntries);
         this.tabulator.setHeight(this.height);
     }
 
     public connectedCallback() {
         this.tabulator = new Tabulator(this.tabulatorElement, {
-            data: this.recordEntries,
+            data: [],
             columns: this.interactiveCols ? INTERACTIVE_COLUMNS : PLAIN_COLUMNS,
             layout: "fitColumns",
             height: `${this.height}px`
         });
         this.tabulator.on("tableBuilt", () => {
             this.tableIsBuild = true;
-            this.updateTable();
+            this.updateTable();     // initial table update
+            this.handlePIDUpdate(); // initial PID fetch
         });
     }
 
+    // destructor, called when component is removed from DOM
     public disconnectedCallback() {
         this.tabulator?.destroy();
         this.tabulatorElement.innerHTML = '';
+        this.tableIsBuild = false;
     }
 }
 

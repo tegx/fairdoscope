@@ -119,3 +119,5 @@ $RECYCLE.BIN/
 node_modules
 package-lock.json
 dist
+public/bundle.js
+handle-example-response.json
