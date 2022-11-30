@@ -17,7 +17,11 @@ module.exports = {
             {
                 test: /\.css$/i,
                 use: ["style-loader", "css-loader"]
-            }
+            },
+            {
+                test: /\.(ttf|woff2)$/,
+                use: 'url-loader'
+            },
         ]
     },
     resolve: {

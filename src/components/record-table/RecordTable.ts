@@ -2,9 +2,13 @@ import { ColumnDefinition, TabulatorFull as Tabulator } from 'tabulator-tables';
 import { createTooltip, renderCell, renderValuePlain } from './ColumnHelpers';
 import { HandleRecordValue } from '../../services/handleapi/handle-record-entry';
 import { getPIDRecord } from '../../services/handleapi/handleapi';
+import "./FontAwesomeStyleHelper";
 import * as tabulatorStyles from "!!to-string-loader!css-loader!tabulator-tables/dist/css/tabulator.min.css";
 import * as tabulatorStylesMat from "!!to-string-loader!css-loader!tabulator-tables/dist/css/tabulator_materialize.min.css";
-import * as fontawesome from "!!to-string-loader!css-loader!@fortawesome/fontawesome-free/css/all.min.css";
+import * as fontawesome from "!!to-string-loader!css-loader!@fortawesome/fontawesome-free/css/fontawesome.min.css";
+import * as fontawesomeSolid from "!!to-string-loader!css-loader!@fortawesome/fontawesome-free/css/solid.min.css";
+import * as fontawesomeRegular from "!!to-string-loader!css-loader!@fortawesome/fontawesome-free/css/regular.css";
+// TODO find better solution for fontawesome imports
 
 /** Table columns for interactive mode */
 export const INTERACTIVE_COLUMNS: ColumnDefinition[] = [
@@ -68,6 +72,8 @@ export class RecordTable extends HTMLElement {
             <style>${tabulatorStyles}</style>
             <style>${tabulatorStylesMat}</style>
             <style>${fontawesome}</style>
+            <style>${fontawesomeSolid}</style>
+            <style>${fontawesomeRegular}</style>
         `;
         shadowRoot.append(this.tabulatorElement);
     }
