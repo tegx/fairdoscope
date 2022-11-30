@@ -10,7 +10,7 @@ import { dataTypes } from "../../mappings";
 export function renderCell(cell: CellComponent): string | HTMLElement {
     const value = cell.getValue();
 
-    if (cell.getColumn().getField() == "type") {
+    if (cell.getColumn().getField() === "type") {
         if (dataTypes.has(value)) {
             const obj = dataTypes.get(value)!;
             return `<a href="https://dtr-test.pidconsortium.eu/#objects/${value}" target="_blank" rel="noopener noreferrer"><i class="${obj.class}">&nbsp;</i>${obj.name}</a>`;
@@ -33,7 +33,11 @@ export function renderCell(cell: CellComponent): string | HTMLElement {
  * @param {CellComponent} cell The cell obtained from the table.
  */
 export function createTooltip(event: MouseEvent, cell: CellComponent): string {
-    return cell.getValue();
+    const value = cell.getValue();
+    if (dataTypes.has(value)) {
+        return dataTypes.get(value)!.name;
+    }
+    return value + "";
 }
 
 /**
@@ -42,5 +46,6 @@ export function createTooltip(event: MouseEvent, cell: CellComponent): string {
  * @param {CellComponent} cell The cell obtained from the table.
  */
 export function renderValuePlain(cell: CellComponent) {
-    return cell.getValue();
+    const value = cell.getValue();
+    return typeof value !== "string" ? "" : value;
 }
