@@ -11,12 +11,19 @@
 <body>
     <script type="text/javascript" src="bundle.js"></script>
 
+    <label>
+        <input type="checkbox" id="switch-col" checked="" />
+        Interactive columns?
+    </label>
     <record-table id="record-table" height="300" interactive="true" pid="21.T11981/6ab464ed-978b-4996-876f-f68ea913a308"></record-table>
 
     <script type="text/javascript">
         const rt = document.getElementById("record-table");
+        rt.addEventListener("pid-changed", (e) => rt.setAttribute("pid", e.detail))
         //rt.setAttribute("pid", "21.T11981/6ab464ed-978b-4996-876f-f68ea913a308");
-        //rt.setAttribute("height", 600);
+        rt.setAttribute("height", 800);
+        const chkbx = document.getElementById("switch-col");
+        chkbx.addEventListener("change", () => rt.setAttribute("interactive", chkbx.checked));
     </script>
 </body>
 </html>
