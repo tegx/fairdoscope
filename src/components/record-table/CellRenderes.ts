@@ -1,6 +1,6 @@
 import { CellComponent } from "tabulator-tables";
 import { createDTRLink, createExternalLink } from "../../common/LinkCreator";
-import { getPIDRecord } from '../../services/handleapi/handleapi';
+import { PIDStore } from '../../services/store';
 import { dataTypes, Renderer } from "../../mappings";
 
 /**
@@ -37,7 +37,7 @@ export function renderValueCell(cell: CellComponent, ): string | HTMLElement {
  */
 export function analyzePIDValue(pid: string): Promise<string|HTMLElement> {
     return new Promise<string|HTMLElement>((resolve, reject) => {
-        getPIDRecord(pid)
+        PIDStore.getPIDRecord(pid)
             .then(recordValues => {
                 let isType = false;
                 let isFairDO = false;

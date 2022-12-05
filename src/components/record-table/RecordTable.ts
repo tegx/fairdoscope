@@ -1,7 +1,7 @@
 import { ColumnDefinition, TabulatorFull as Tabulator } from 'tabulator-tables';
 import { analyzePIDValue, createTooltip, renderTypeCell, renderValueCell, renderValuePlain } from './CellRenderes';
 import { HandleRecordValue } from '../../services/handleapi/handle-record-entry';
-import { getPIDRecord } from '../../services/handleapi/handleapi';
+import { PIDStore } from '../../services/store';
 import "./FontAwesomeStyleHelper";
 import * as tabulatorStyles from "!!to-string-loader!css-loader!tabulator-tables/dist/css/tabulator.min.css";
 import * as tabulatorStylesMat from "!!to-string-loader!css-loader!tabulator-tables/dist/css/tabulator_materialize.min.css";
@@ -102,7 +102,7 @@ export class RecordTable extends HTMLElement {
 
     private handlePIDUpdate() {
         if (!this.pid) return;
-        getPIDRecord(this.pid)
+        PIDStore.getPIDRecord(this.pid)
             .then((entries: HandleRecordValue[]) => {
                 if (!this.tableIsBuild || !this.tabulator) return;
                 if (this.interactive) {
